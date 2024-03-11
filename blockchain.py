@@ -8,6 +8,7 @@ from Crypto.Random import get_random_bytes
 from base64 import b64encode,b64decode
 
 
+# TODO: This is kind of a mess, mostly my experimentation with encryption stuff. The block chain should be from a raw binary file.
 class Block:
     def __init__(self, previous_hash, case_id, evidence_item_id, state, creator, owner, data, aes_key):
         self.previous_hash = previous_hash
