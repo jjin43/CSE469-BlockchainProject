@@ -28,11 +28,12 @@ def verify_output(self, blockcount, state, badblock=None, badstate=None):
 # class for creating blocks
 class Block:
     def __init__(self, previous_hash, state, data, aes_key, case_id=None, evidence_item_id=None,  creator=None, owner=None):
+        self.aes_key = aes_key
         self.previous_hash = previous_hash
         self.timestamp = time.time()
         self.case_id = self.encrypt_aes_ecb(case_id, aes_key) if case_id else None
         self.evidence_item_id = self.encrypt_aes_ecb(evidence_item_id, aes_key) if evidence_item_id else None
-        self.state = state
+        self.state = state.encode('utf-8')
         self.creator = creator[:12] if creator else None
         self.owner = owner if owner in ['Police', 'Lawyer', 'Analyst', 'Executive'] else None
         self.data = data
@@ -41,20 +42,45 @@ class Block:
        
     def write_block(self, path):
         if self.case_id:
-            self.case_id = self.encrypt_aes_ecb(self.case_id, self.aes_key)
+            self.case_id = encrypt_aes_ecb(self.case_id, self.aes_key)
         if self.evidence_item_id:
-            self.evidence_item_id = self.encrypt_aes_ecb(self.evidence_item_id, self.aes_key)
+            self.evidence_item_id = encrypt_aes_ecb(self.evidence_item_id, self.aes_key)
+
+        if (self.previous_hash == None):
+            self.previous_hash = bytes(0)
+
+        if (self.case_id == None):
+            self.case_id = bytes(0)
         
+        if (self.evidence_item_id == None):
+            self.evidence_item_id = bytes(0)
+        
+        if (self.creator == None):
+            self.creator = bytes(0)
+
+        if (self.owner == None):
+            self.owner = bytes(0)
+        
+
         with open(path, 'ab') as file:
-            file.write(self.previous_hash.encode('utf-8').ljust(32, b'\x00'))
-            file.write(struct.pack('d', self.timestamp))
-            file.write(self.case_id.ljust(32, b'\x00'))
-            file.write(self.evidence_item_id.ljust(32, b'\x00'))
-            file.write(self.state.encode('utf-8').ljust(12, b'\x00'))
-            file.write(self.creator.encode('utf-8').ljust(12, b'\x00'))
-            file.write(self.owner.encode('utf-8').ljust(12, b'\x00'))
-            file.write(struct.pack('I', self.data_length))
+            # NOTE: I RUINED THIS TO SEE IF STUFF PRINTED, COULD BE COMPLETELY REDONE
+            struct.pack("32s", self.state)
+
+            file.write(struct.pack("32s d 32s 32s 12s 12s 12s I", self.previous_hash,
+                                   self.timestamp, self.case_id, self.evidence_item_id,
+                                   self.state, self.creator, self.owner, self.data_length))
+            
             file.write(self.data.encode('utf-8'))
+
+            # file.write(self.previous_hash.encode('utf-8').ljust(32, b'\x00'))
+            # file.write(struct.pack('d', self.timestamp))
+            # file.write(self.case_id.ljust(32, b'\x00'))
+            # file.write(self.evidence_item_id.ljust(32, b'\x00'))
+            # file.write(self.state.encode('utf-8').ljust(12, b'\x00'))
+            # file.write(self.creator.encode('utf-8').ljust(12, b'\x00'))
+            # file.write(self.owner.encode('utf-8').ljust(12, b'\x00'))
+            # file.write(struct.pack('I', self.data_length))
+            # file.write(self.data.encode('utf-8'))
         
 
     
