@@ -14,7 +14,7 @@ import os
 import blockchain
 
 
-# TODO: handle command line calls -- Thomas will take a look
+# TODO: handle command line calls -- Thomas test 2
 class bchoc:
     path = ""
     aes_key = ""
