@@ -153,6 +153,9 @@ class bchoc:
             self._parse_show_items()
         elif showType == "history":
             self._parse_show_history()
+        else:
+            print("Incorrect show type (Expects: 'cases', 'items', or 'history')")
+            exit(1)
 
     # Parses and calls execution of the checkin argument
     # Receives no value
