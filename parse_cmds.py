@@ -21,6 +21,9 @@ class bchoc:
     path = ""
     aes_key = ""
     arguments = []
+
+    acceptableReasons = ["DISPOSED", "DESTROYED", "RELEASED"]
+    acceptableOwners = ["POLICE", "LAWYER", "ANALYST", "EXECUTIVE"]
     
     def __init__(self, argv):
         if('AES_KEY' in os.environ):
@@ -79,7 +82,7 @@ class bchoc:
     # Returns no value
     def _parse_cmds(self):
         # Get the operation
-        operation = self.getNextArg() # NOTE: Verify that this is @ 0
+        operation = self.getNextArg()
 
         # No blockchain file exits, create one and note creation NOTE: MAY REQUIRE REPAIR
         bchocFileExists = True
@@ -200,15 +203,16 @@ class bchoc:
         else:
             self.expectArg("--why")
         
-        reason = self.getNextArg()
+        reason = self.getNextArg().upper() # NOTE: the conversion to uppercase
         self.verifyReason(reason)
 
-        # Check if there is an owner released to, saving if so
+        # Check if there is an owner released to, verifying and saving if so
         tempArg = self.peekNextArg()
         owner = ""
-        if (reason == "RELEASED"): # NOTE: check that this needs to be all uppercase
+        if (reason == "RELEASED"): 
             self.expectArg("-o")
-            owner = self.getNextArg()
+            owner = self.getNextArg().upper() # NOTE: the conversion to uppercase
+            self.verifyOwner(owner)
 
         # Get the password
         self.expectArg("-p")
@@ -220,17 +224,27 @@ class bchoc:
     # Receives the reason given as an argument
     # Returns no value
     def verifyReason(self, reason):
-        # Check for any match
-        isDisposed = reason == "DISPOSED"
-        isDestroyed = reason == "DESTROYED"
-        isReleased = reason == "RELEASED"
+        # Check for any match, returning if found
+        for acceptReason in self.acceptableReasons:
+            if (reason == acceptReason):
+                return
 
-        # Throw an error if none match
-        if (isDisposed or isDestroyed or isReleased):
-            return
-        else:
-            print("Invalid reason (Expects: DISPOSED, DESTROYED, or RELEASED)")
-            exit(1);
+        # Throw an error if no match is found
+        print("Invalid reason (Expects: DISPOSED, DESTROYED, or RELEASED)")
+        exit(1)
+
+    # Verifies whether or not a given owner is one of the valid 4, throwing an error if no
+    # Receives the owner as a string
+    # Returns no value
+    def verifyOwner(self, owner):
+        # Check for any match, returing if found
+        for acceptOwner in self.acceptableOwners:
+            if (owner == acceptOwner):
+                return
+        
+        # Throw an error if no match is found
+        print("Invalid owner (Expects: POLICE, LAWYER, ANALYST, or EXECUTIVE)")
+        exit(1)
 
     # Parses and calls execution of the cases argument from the show branch
     # Receives no value
