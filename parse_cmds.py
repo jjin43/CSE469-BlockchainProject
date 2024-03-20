@@ -32,14 +32,18 @@ class bchoc:
             self.aes_key = 1234567890123456  # raw key
         
         if('BCHOC_FILE_PATH' in os.environ):
+            self.bchocFileExists = True
             self.path = os.environ['BCHOC_FILE_PATH']   # provided path
+            
         else:
+            self.bchocFileExists = False
             self.path = os.getcwd() + "/bchoc.dat"  # raw binary file
 
         # save arguments
         self.arguments = argv
                 
         # Parse commands and execute them
+        self.chain = blockchain.Chain(self.path, self.aes_key)
         self._parse_cmds()
     
     # Returns the next argument in the list of arguments and consumes,
@@ -85,9 +89,7 @@ class bchoc:
         operation = self.getNextArg()
 
         # No blockchain file exits, create one and note creation NOTE: MAY REQUIRE REPAIR
-        bchocFileExists = True
-        if not os.path.exists(self.path):
-            bchocFileExists = False # for use in init, prevents repeat creation
+        if not self.bchocFileExists:
 
             previous_hash = None  # first block no prev hash, all 0s.
             initblock = blockchain.Block(previous_hash, "INITIAL", "Initial block", self.aes_key)
@@ -105,12 +107,12 @@ class bchoc:
         elif operation == "remove":
             self._parse_remove()
         elif operation == "init":
-            self.init(bchocFileExists)
+            self.initOutput()
         elif operation == "verify":
             self.verify()
         else:
             print("Invalid command")
-            exit(1);
+            exit(1)
             
     # Parses and calls execution of the add argument
     # Receives no value
@@ -140,14 +142,14 @@ class bchoc:
         self.expectArg("-p")
         password = self.getNextArg()
         
-        # self.add(case_id, item_ids, creator, password)    
+        self.add(case_id, item_ids, creator, password)
 
     # Parses and calls execution of the show argument
     # Receives no value
     # Returns no value
     def _parse_show(self):
         # Get the show type
-        showType = self.getNextArg();
+        showType = self.getNextArg()
 
         # Follow the path aligning with the found type
         if showType == "cases":
@@ -284,7 +286,7 @@ class bchoc:
         tempArg = self.peekNextArg()
         if (tempArg == "-c"):
             self.expectArg("-c")
-            caseID = self.getNextArg();
+            caseID = self.getNextArg()
         
         # Check for itemID, saving if there 
         tempArg = self.peekNextArg()
@@ -316,7 +318,16 @@ class bchoc:
 
     def add(self, case_id, item_ids, creator, password):
         for item_id in item_ids:
-            WIP
+            if(self.chain.item_id_exist(item_id)):   
+                print("Error: Item ID" + str(item_id) + "already exists in the blockchain")
+                exit(1)
+        
+        data = "" # Data is empty for now, will be provided?
+        
+        for item_id in item_ids:
+            newBlock = blockchain.Block(self.chain.get_last_block_hash(), "CHECKEDIN", data, self.aes_key, case_id, item_id, creator, owner=None)
+            newBlock.write_block(self.path)
+            
     def checkin(self, itemID, password):
         WIP
     def checkout(self, itemID, password):
@@ -327,21 +338,19 @@ class bchoc:
         WIP
     def show_history(self):
         WIP
-    def remove(self, itemId, reason, owner, password):
+    def remove(self, itemIds, reason, owner, password):
+        for item_id in itemIds:
+            if(not self.chain.item_id_exist(item_id)):   
+                print("Error: Cannot remove" + str(item_id) + ". Item ID does not exist in the blockchain")
+                exit(1)
         WIP
     
 
-    # Executes the init argument
-    # Receives a boolean representing whether or not the blockchain file was found earlier
-    # Returns no value
-    def init(self, bchocFileExists):
-        if (bchocFileExists):
+    def initOutput(self):
+        if (self.bchocFileExists):
             print("Blockchain file found with INITIAL block.")
         else:
             print("Blockchain file not found. Created INITIAL block.")
     
-    # Executes the verify argument
-    # Receives no value
-    # Returns no value
     def verify(self):
-        Chain = blockchain.Chain(self.path, self.aes_key)
+        self.chain.verify()
