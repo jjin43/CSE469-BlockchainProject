@@ -359,7 +359,7 @@ class bchoc:
             if(not self.chain.item_id_exist(item_id)):   
                 print("Error: Cannot remove" + str(item_id) + ". Item ID does not exist in the blockchain")
                 exit(1)
-        WIP
+        self.chain.remove(itemIds, reason, owner)
     
 
     def initOutput(self):

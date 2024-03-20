@@ -244,7 +244,9 @@ class Chain:
     def get_cases():
         WIP
     def get_items(case_id):
-
+        WIP
+    def remove(item_id):
+        WIP
             
 
 
