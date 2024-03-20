@@ -329,13 +329,29 @@ class bchoc:
             newBlock.write_block(self.path)
             
     def checkin(self, itemID, password):
-        WIP
+        for item_id in itemID:
+            if(not self.chain.item_id_exist(item_id)):   
+                print("Error: Cannot Check In" + str(item_id) + ". Item ID does not exist in the blockchain")
+                exit(1)
+            if(self.chain.is_checkedIn(item_id)):
+                print("Error: Cannot Check In" + str(item_id) + ". Item ID is already checked in")
+                exit(1)
+        self.chain.checkin(itemID)
     def checkout(self, itemID, password):
-        WIP
+        for item_id in itemID:
+            if(not self.chain.item_id_exist(item_id)):   
+                print("Error: Cannot Check out" + str(item_id) + ". Item ID does not exist in the blockchain")
+                exit(1)
+            if(not self.chain.is_checkedIn(item_id)):
+                print("Error: Cannot Check out" + str(item_id) + ". Item ID is already checked out")
+                exit(1)
+        self.chain.checkout(itemID)
     def show_cases(self, password):
-        WIP
+        self.chain.get_cases()
+        
     def show_items(self, caseID, password):
-        WIP
+        self.chain.get_items(caseID)
+        
     def show_history(self):
         WIP
     def remove(self, itemIds, reason, owner, password):
@@ -353,4 +369,12 @@ class bchoc:
             print("Blockchain file not found. Created INITIAL block.")
     
     def verify(self):
-        self.chain.verify()
+        state = "OKAY"
+        badblock = self.chain.verify()
+        if badblock!=0:
+            state = "ERROR"
+        print("Transactions in blockchain: " + str(self.chain.get_blockcount()))
+        print("State of blockchain: " + state)
+        if badblock:
+            print("Bad block: " + badblock)
+            exit(1)

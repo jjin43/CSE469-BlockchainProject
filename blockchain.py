@@ -16,12 +16,7 @@ def decrypt_aes_ecb(data, key):
     cipher = AES.new(key, AES.MODE_ECB)
     return struct.unpack('I', cipher.decrypt(data).strip(b'\x00').strip(b'\x0c'))[0]
 
-# output helper functions
-def verify_output(self, blockcount, state, badblock=None, badstate=None):
-    print("Transactions in blockchain: " + str(blockcount))
-    print("State of blockchain: " + state)
-    if badblock:
-        print("Bad block: " + badblock)
+
     
     # WIP
     # if badstate:
@@ -222,6 +217,33 @@ class Chain:
                         else:
                             checkedIn = False
         return checkedIn
+    
+    def get_blockcount(self):
+        with open(self.path, 'rb') as f:
+            count = 0
+            while True:
+                previous_hash = f.read(32)
+                if not previous_hash:
+                    break
+                # dummy read to skip the rest of the block
+                timestamp = f.read(8)
+                case_id = f.read(32)
+                aes_evidence_item_id = f.read(32)
+                state = f.read(12)
+                creator = f.read(12)
+                owner = f.read(12)
+                data_length = f.read(4)
+                data = f.read(struct.unpack('I', data_length)[0])
+                count += 1
+        return count
+    
+    def checkin(self, item_id):
+        WIP
+    def checkout(self, item_id):
+        WIP
+    def get_cases():
+        WIP
+    def get_items(case_id):
 
             
 
