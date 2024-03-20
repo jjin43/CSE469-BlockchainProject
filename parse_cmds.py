@@ -27,9 +27,9 @@ class bchoc:
     
     def __init__(self, argv):
         if('AES_KEY' in os.environ):
-            self.aes_key = os.environ['AES_KEY']  # provided key
+            self.aes_key = os.environ['AES_KEY'].encode('utf-8').ljust(16, b'\0')  # provided key
         else:
-            self.aes_key = 1234567890123456  # raw key
+            self.aes_key = str(12345).encode('utf-8').ljust(16, b'\0')
         
         if('BCHOC_FILE_PATH' in os.environ):
             self.bchocFileExists = True
