@@ -319,7 +319,7 @@ class bchoc:
     def add(self, case_id, item_ids, creator, password):
         for item_id in item_ids:
             if(self.chain.item_id_exist(item_id)):   
-                print("Error: Item ID" + str(item_id) + "already exists in the blockchain")
+                print("Error: Item ID [" + str(item_id) + "] already exists in the blockchain")
                 exit(1)
         
         data = "" # Data is empty for now, will be provided?

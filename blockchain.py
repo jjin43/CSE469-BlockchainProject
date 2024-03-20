@@ -14,7 +14,7 @@ def encrypt_aes_ecb(data, key):
 
 def decrypt_aes_ecb(data, key):
     cipher = AES.new(key, AES.MODE_ECB)
-    return unpad(cipher.decrypt(data), 16).decode('utf-8')
+    return struct.unpack('I', cipher.decrypt(data).strip(b'\x00').strip(b'\x0c'))[0]
 
 # output helper functions
 def verify_output(self, blockcount, state, badblock=None, badstate=None):
@@ -145,8 +145,8 @@ class Chain:
                 owner = f.read(12)
                 data_length = f.read(4)
                 data = f.read(struct.unpack('I', data_length)[0])
-                if not state.decode('utf-8').strip('\x00') == 'INITIAL':
-                    if decrypt_aes_ecb(aes_evidence_item_id, self.aes_key) == item_id:
+                if not state.strip(b'\x00').decode('utf-8') == 'INITIAL':
+                    if decrypt_aes_ecb(aes_evidence_item_id.strip(b'\x00'), self.aes_key) == int(item_id):
                         return True
         return False
 
@@ -168,7 +168,7 @@ class Chain:
                 data_length = f.read(4)
                 data = f.read(struct.unpack('I', data_length)[0])
                 if(not state.decode('utf-8') == "INITIAL"):
-                    if decrypt_aes_ecb(aes_evidence_item_id, self.aes_key) == item_id:
+                    if decrypt_aes_ecb(aes_evidence_item_id.strip(b'\x00'), self.aes_key) == item_id:
                         if state == "CHECKEDIN":
                             checkedIn = True
                         else:
