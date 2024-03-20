@@ -77,23 +77,67 @@ class Block:
 # for blockchain operations requiring iterating through the blockchain file
 class Chain:
     def __init__(self, path, aes_key):
+        self.chunk_mem = 1024
         self.path = path
         self.aes_key = aes_key
     
     
     # parse the block chain and validate all entries    
     def verify(self):
-        # parse by chunks to avoid memory issues
+        # verify #1: check hash correctness
         with open(self.path, 'rb') as f:
-            done = False
-            # WIP
+            previous_hash = None
+            actual_prev_hash = b''  # initial block has no previous hash
+            count = 0
+            while True:
+                count += 1
+                previous_hash = f.read(32)
+                if not previous_hash:
+                    break
+                if previous_hash != actual_prev_hash:
+                    return count             
+                # dummy read to skip the rest of the block
+                timestamp = f.read(8)
+                case_id = f.read(32)
+                evidence_item_id = f.read(32)
+                state = f.read(12)
+                creator = f.read(12)
+                owner = f.read(12)
+                data_length = f.read(4)
+                
+                # hashing data chunk by chunk to avoid memory issues
+                if previous_hash == b'':
+                    previous_hash = b'\x00'*32
+                if data_length == b'':
+                    data_length = b'\x00'*4
+                hash = hashlib.sha256(previous_hash + timestamp + case_id + evidence_item_id + state + creator + owner + data_length)
+                
+                i = 0
+                data_length_int = struct.unpack('I', data_length)[0]
+                while i < data_length_int: 
+                    if i + self.chunk_mem < data_length_int:
+                        data = f.read(self.chunk_mem)
+                        i += self.chunk_mem
+                    else:
+                        data = f.read(data_length_int - i)
+                        i = data_length_int
+                    hash.update(data)
+                actual_prev_hash = hash.digest()
+        
+        # verify #2: check for inproper actions (removed item being checked in, etc.)   
+        # WIP
+        
+        
+        # No errors found 
+        return 0
                 
                 
                 
     def get_last_block_hash(self):
-        previous_hash = None
+        
         with open(self.path, 'rb') as f:
             # iterate through the file to find the last block
+            previous_hash = None
             while True:
                 last = previous_hash
                 previous_hash = f.read(32)
@@ -107,25 +151,29 @@ class Chain:
                 creator = f.read(12)
                 owner = f.read(12)
                 data_length = f.read(4)
+                data_address = f.tell()
+                data = f.read(struct.unpack('I', data_length)[0])
                 
-            # when breaks, file pointer is at last block's data section
+            # when breaks, use data_address to read the data section of the last block
             # hashing data chunk by chunk to avoid memory issues
-            hash = hashlib.sha256(previous_hash + timestamp + case_id + evidence_item_id + state + creator + owner + data_length)
+            if last == b'':
+                last = b'\x00'*32
+            if data_length == b'':
+                data_length = b'\x00'*4
+            hash = hashlib.sha256(last + timestamp + case_id + evidence_item_id + state + creator + owner + data_length)
             
             i = 0
-            if data_length == b'':
-                data_length_int = 0
-                hash.update(b'')
-            else:
-                data_length_int = struct.unpack('I', data_length)[0]
-                while i < data_length_int: 
-                    if i + 1024 <= data_length_int:
-                        data = f.read(1024)
-                        i += 1024
-                    else:
-                        data = f.read(data_length_int - i)
-                        i = data_length_int
-                    hash.update(data)
+            data_length_int = struct.unpack('I', data_length)[0]
+            while i < data_length_int: 
+                if i + self.chunk_mem < data_length_int:
+                    f.seek(data_address + i, 0)
+                    data = f.read(self.chunk_mem)
+                    i += self.chunk_mem
+                else:
+                    f.seek(data_address + i, 0)
+                    data = f.read(data_length_int - i)
+                    i = data_length_int
+                hash.update(data)
                 
             return hash.digest()
                 
@@ -168,7 +216,7 @@ class Chain:
                 data_length = f.read(4)
                 data = f.read(struct.unpack('I', data_length)[0])
                 if(not state.decode('utf-8') == "INITIAL"):
-                    if decrypt_aes_ecb(aes_evidence_item_id.strip(b'\x00'), self.aes_key) == item_id:
+                    if decrypt_aes_ecb(aes_evidence_item_id.strip(b'\x00'), self.aes_key) == int(item_id):
                         if state == "CHECKEDIN":
                             checkedIn = True
                         else:
