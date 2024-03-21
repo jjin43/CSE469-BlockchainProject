@@ -364,6 +364,10 @@ class Chain:
                 if case_id==int(target_case_id) and state.strip(b'\x00').decode('utf-8') != "INITIAL":
                     itemList.append(item_id)
         return itemList
+    
+    def get_history(self, case_id=None, item_id=None):
+        WIP
+    
     def remove(self, item_id, reason_state, new_owner=None):
         with open(self.path, 'rb') as f:
             target_data = None

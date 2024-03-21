@@ -276,9 +276,9 @@ class bchoc:
     # Receives no value
     # Returns no value
     def _parse_show_history(self):
-        caseID = ""
-        itemID = ""
-        numEntries = ""
+        caseID = None
+        itemID = None
+        numEntries = None
         isReversed = False
 
         # Check for caseID, saving if there
@@ -312,7 +312,7 @@ class bchoc:
         self.expectArg("-p")
         password = self.getNextArg()
 
-        # self.show_history(caseID, itemID, numEntries, isReversed, password)
+        self.show_history(caseID, itemID, numEntries, isReversed)
 
 
     def add(self, case_id, item_ids, creator, password):
@@ -354,8 +354,27 @@ class bchoc:
             exit(1)
         print("Evidences Under Case [" + caseID + "]: " + self.chain.get_items(caseID))
         
-    def show_history(self):
-        WIP
+    def show_history(self, caseID=None, itemID=None, numEntries=None, isReversed=False):
+        
+        if caseID:
+            if not self.chain.case_id_exist(caseID):
+                print("Error: Cannot show history. Case ID does not exist in the blockchain")
+                exit(1)
+        if itemID:
+            if not self.chain.item_id_exist(itemID):
+                print("Error: Cannot show history. Item ID does not exist in the blockchain")
+                exit(1)
+        
+        if isReversed:
+            history = self.chain.get_history(caseID, itemID)[::-1]
+        else:
+            history = self.chain.get_history(caseID, itemID)
+            
+        if numEntries:
+            history = history[:int(numEntries)]
+        
+        print(history)
+        
     def remove(self, item_id, reason, owner, password):
         # reason is one of DISPOSED, DESTROYED, RELEASED
         if(not self.chain.item_id_exist(item_id)):   
