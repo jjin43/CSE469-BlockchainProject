@@ -261,6 +261,12 @@ class Chain:
     
     def checkin(self, item_id):
         with open(self.path, 'rb') as f:
+            target_data = None
+            target_case_id = None
+            target_evidence_item_id = None
+            target_creator = None
+            target_owner = None
+            
             while True:
                 previous_hash = f.read(32)
                 if not previous_hash:
@@ -274,12 +280,24 @@ class Chain:
                 owner = f.read(12)
                 data_length = f.read(4)
                 data = f.read(struct.unpack('I', data_length)[0])
+                if(decrypt_aes_ecb(evidence_item_id.strip(b'\x00'), self.aes_key) == int(item_id)):
+                    target_data = data
+                    target_case_id = case_id
+                    target_evidence_item_id = evidence_item_id
+                    target_creator = creator
+                    target_owner = owner
                 
-            updatedBlock = Block(self.get_last_block_hash(), "CHECKEDIN".encode('utf-8'), data, self.aes_key, case_id, evidence_item_id, creator, owner, rawBytes=True)
+            updatedBlock = Block(self.get_last_block_hash(), "CHECKEDIN".encode('utf-8'), target_data, self.aes_key, target_case_id, target_evidence_item_id, target_creator, target_owner, rawBytes=True)
             updatedBlock.write_block(self.path)
                 
     def checkout(self, item_id):
         with open(self.path, 'rb') as f:
+            target_data = None
+            target_case_id = None
+            target_evidence_item_id = None
+            target_creator = None
+            target_owner = None
+            
             while True:
                 previous_hash = f.read(32)
                 if not previous_hash:
@@ -293,8 +311,14 @@ class Chain:
                 owner = f.read(12)
                 data_length = f.read(4)
                 data = f.read(struct.unpack('I', data_length)[0])
+                if(decrypt_aes_ecb(evidence_item_id.strip(b'\x00'), self.aes_key) == int(item_id)):
+                    target_data = data
+                    target_case_id = case_id
+                    target_evidence_item_id = evidence_item_id
+                    target_creator = creator
+                    target_owner = owner
                 
-            updatedBlock = Block(self.get_last_block_hash(), "CHECKEDOUT".encode('utf-8'), data, self.aes_key, case_id, evidence_item_id, creator, owner, rawBytes=True)
+            updatedBlock = Block(self.get_last_block_hash(), "CHECKEDOUT".encode('utf-8'), target_data, self.aes_key, target_case_id, target_evidence_item_id, target_creator, target_owner, rawBytes=True)
             updatedBlock.write_block(self.path)
                 
     def get_cases(self):

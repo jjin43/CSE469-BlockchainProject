@@ -89,8 +89,7 @@ class bchoc:
         operation = self.getNextArg()
 
         # No blockchain file exits, create one and note creation NOTE: MAY REQUIRE REPAIR
-        if not self.bchocFileExists:
-
+        if not os.path.isfile(self.path):
             previous_hash = b'\x00' * 32  # first block no prev hash, all empty bytes.
             initblock = blockchain.Block(previous_hash, "INITIAL", "Initial block", self.aes_key)
             initblock.write_block(self.path)
