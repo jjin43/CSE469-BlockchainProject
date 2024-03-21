@@ -91,7 +91,7 @@ class bchoc:
         # No blockchain file exits, create one and note creation NOTE: MAY REQUIRE REPAIR
         if not self.bchocFileExists:
 
-            previous_hash = None  # first block no prev hash, all 0s.
+            previous_hash = b'\x00' * 32  # first block no prev hash, all empty bytes.
             initblock = blockchain.Block(previous_hash, "INITIAL", "Initial block", self.aes_key)
             initblock.write_block(self.path)
 
@@ -174,7 +174,7 @@ class bchoc:
         self.expectArg("-p")
         password = self.getNextArg()
 
-        # self.checkin(itemId, password)
+        self.checkin(itemId, password)
     
     # Parses and calls execution of the checkout argument
     # Receives no value
@@ -188,7 +188,7 @@ class bchoc:
         self.expectArg("-p")
         password = self.getNextArg()
 
-        # self.checkout(itemId, password)
+        self.checkout(itemId, password)
     
     # Parses and calls execution of the remove argument
     # Receives no value
@@ -220,7 +220,7 @@ class bchoc:
         self.expectArg("-p")
         password = self.getNextArg()
 
-        # self.remove(itemId, reason, owner, password)
+        self.remove(itemId, reason, owner, password)
 
     # Verifies whether or not a given reason is one of the valid 3, throwing an error if not
     # Receives the reason given as an argument
@@ -256,7 +256,7 @@ class bchoc:
         self.expectArg("-p")
         password = self.getNextArg()
 
-        # self.show_cases(password)
+        self.show_cases(password)
     
     # Parses and calls execution of the items argument from the show branch
     # Receives no value
@@ -270,7 +270,7 @@ class bchoc:
         self.expectArg("-p")
         password = self.getNextArg()
 
-        # self.show_items(caseID, password)
+        self.show_items(caseID, password)
 
 
     # Parses and calls execution of the cases argument from the show branch
@@ -328,38 +328,41 @@ class bchoc:
             newBlock = blockchain.Block(self.chain.get_last_block_hash(), "CHECKEDIN", data, self.aes_key, case_id, item_id, creator, owner=None)
             newBlock.write_block(self.path)
             
-    def checkin(self, itemID, password):
-        for item_id in itemID:
-            if(not self.chain.item_id_exist(item_id)):   
-                print("Error: Cannot Check In" + str(item_id) + ". Item ID does not exist in the blockchain")
-                exit(1)
-            if(self.chain.is_checkedIn(item_id)):
-                print("Error: Cannot Check In" + str(item_id) + ". Item ID is already checked in")
-                exit(1)
-        self.chain.checkin(itemID)
-    def checkout(self, itemID, password):
-        for item_id in itemID:
-            if(not self.chain.item_id_exist(item_id)):   
-                print("Error: Cannot Check out" + str(item_id) + ". Item ID does not exist in the blockchain")
-                exit(1)
-            if(not self.chain.is_checkedIn(item_id)):
-                print("Error: Cannot Check out" + str(item_id) + ". Item ID is already checked out")
-                exit(1)
-        self.chain.checkout(itemID)
+    def checkin(self, item_id, password):
+        if(not self.chain.item_id_exist(item_id)):   
+            print("Error: Cannot Check In [" + str(item_id) + "]. Item ID does not exist in the blockchain")
+            exit(1)
+        if(self.chain.is_checkedIn(item_id)):
+            print("Error: Cannot Check In [" + str(item_id) + "]. Item ID is already checked in")
+            exit(1)
+        self.chain.checkin(item_id)
+        
+    def checkout(self, item_id, password):
+        if(not self.chain.item_id_exist(item_id)):   
+            print("Error: Cannot Check out [" + str(item_id) + "]. Item ID does not exist in the blockchain")
+            exit(1)
+        if(not self.chain.is_checkedIn(item_id)):
+            print("Error: Cannot Check out [" + str(item_id) + "]. Item ID is already checked out")
+            exit(1)
+        self.chain.checkout(item_id)
+        
     def show_cases(self, password):
-        self.chain.get_cases()
+        print("Exisitng Cases: " + self.chain.get_cases())
         
     def show_items(self, caseID, password):
-        self.chain.get_items(caseID)
+        if not self.chain.case_id_exist(caseID):
+            print("Error: Cannot show items. Case ID does not exist in the blockchain")
+            exit(1)
+        print("Evidences Under Case [" + caseID + "]: " + self.chain.get_items(caseID))
         
     def show_history(self):
         WIP
-    def remove(self, itemIds, reason, owner, password):
-        for item_id in itemIds:
-            if(not self.chain.item_id_exist(item_id)):   
-                print("Error: Cannot remove" + str(item_id) + ". Item ID does not exist in the blockchain")
-                exit(1)
-        self.chain.remove(itemIds, reason, owner)
+    def remove(self, item_id, reason, owner, password):
+        # reason is one of DISPOSED, DESTROYED, RELEASED
+        if(not self.chain.item_id_exist(item_id)):   
+            print("Error: Cannot remove" + str(item_id) + ". Item ID does not exist in the blockchain")
+            exit(1)
+        self.chain.remove(item_id, reason, owner)
     
 
     def initOutput(self):
