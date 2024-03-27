@@ -393,6 +393,6 @@ class bchoc:
             exit(1)
             
     def checkPassword(self, password):
-        if(password != os.environ['PASSWORD']):
+        if('PASSWORD' in os.environ) and (password != os.environ['PASSWORD']):
             print("Error: Incorrect password")
             exit(1)
