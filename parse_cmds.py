@@ -316,6 +316,8 @@ class bchoc:
 
 
     def add(self, case_id, item_ids, creator, password):
+        self.checkPassword(password)
+        
         for item_id in item_ids:
             if(self.chain.item_id_exist(item_id)):   
                 print("Error: Item ID [" + str(item_id) + "] already exists in the blockchain")
@@ -328,6 +330,8 @@ class bchoc:
             newBlock.write_block(self.path)
             
     def checkin(self, item_id, password):
+        self.checkPassword(password)
+        
         if(not self.chain.item_id_exist(item_id)):   
             print("Error: Cannot Check In [" + str(item_id) + "]. Item ID does not exist in the blockchain")
             exit(1)
@@ -337,6 +341,8 @@ class bchoc:
         self.chain.checkin(item_id)
         
     def checkout(self, item_id, password):
+        self.checkPassword(password)
+        
         if(not self.chain.item_id_exist(item_id)):   
             print("Error: Cannot Check out [" + str(item_id) + "]. Item ID does not exist in the blockchain")
             exit(1)
@@ -346,9 +352,12 @@ class bchoc:
         self.chain.checkout(item_id)
         
     def show_cases(self, password):
+        self.checkPassword(password)
         print("Exisitng Cases: " + self.chain.get_cases())
         
     def show_items(self, caseID, password):
+        self.checkPassword(password)
+        
         if not self.chain.case_id_exist(caseID):
             print("Error: Cannot show items. Case ID does not exist in the blockchain")
             exit(1)
@@ -356,7 +365,9 @@ class bchoc:
         
     def show_history(self):
         WIP
+        
     def remove(self, item_id, reason, owner, password):
+        self.checkPassword(password)
         # reason is one of DISPOSED, DESTROYED, RELEASED
         if(not self.chain.item_id_exist(item_id)):   
             print("Error: Cannot remove" + str(item_id) + ". Item ID does not exist in the blockchain")
@@ -379,4 +390,9 @@ class bchoc:
         print("State of blockchain: " + state)
         if badblock:
             print("Bad block: " + badblock)
+            exit(1)
+            
+    def checkPassword(self, password):
+        if(password != os.environ['PASSWORD']):
+            print("Error: Incorrect password")
             exit(1)
